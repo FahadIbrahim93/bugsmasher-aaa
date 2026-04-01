@@ -242,15 +242,18 @@ export class WebGLRenderer {
     batch.indices[batch.indexCount++] = base; batch.indices[batch.indexCount++] = base + 2; batch.indices[batch.indexCount++] = base + 3;
   }
 
-  drawSprite(x: number, y: number, width: number, height: number, textureKey: string, color: Color = { r: 1, g: 1, b: 1, a: 1 }): void {
+  drawSprite(x: number, y: number, width: number, height: number, textureKey: string, color: Color = { r: 1, g: 1, b: 1, a: 1 }, rotation: number = 0): void {
     const texture = this.textures.get(textureKey); if (!texture) return;
     this.useShader(this.defaultShader!);
     if (this.currentBatch?.texture !== texture) { this.flush(); this.currentBatch = this.createBatch(texture); }
     if (!this.currentBatch || this.currentBatch.vertexCount >= this.maxBatchSize * 4) { this.flush(); this.currentBatch = this.createBatch(texture); }
     const batch = this.currentBatch; const hw = width / 2; const hh = height / 2;
-    const verts = [x - hw, y - hh, x + hw, y - hh, x + hw, y + hh, x - hw, y + hh];
+    const cos = Math.cos(rotation); const sin = Math.sin(rotation);
+    const localVerts = [-hw, -hh, hw, -hh, hw, hh, -hw, hh];
     for (let i = 0; i < 4; i++) {
-      batch.vertices[batch.vertexCount * 2] = verts[i * 2]; batch.vertices[batch.vertexCount * 2 + 1] = verts[i * 2 + 1];
+      const lx = localVerts[i * 2]; const ly = localVerts[i * 2 + 1];
+      batch.vertices[batch.vertexCount * 2] = x + lx * cos - ly * sin;
+      batch.vertices[batch.vertexCount * 2 + 1] = y + lx * sin + ly * cos;
       batch.texCoords[batch.vertexCount * 2] = i === 0 || i === 3 ? 0 : 1; batch.texCoords[batch.vertexCount * 2 + 1] = i < 2 ? 0 : 1;
       batch.colors[batch.vertexCount * 4] = color.r; batch.colors[batch.vertexCount * 4 + 1] = color.g;
       batch.colors[batch.vertexCount * 4 + 2] = color.b; batch.colors[batch.vertexCount * 4 + 3] = color.a;

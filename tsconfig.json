@@ -15,6 +15,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
+      "@components/*": ["./src/components/*"],
       "@core/*": ["./src/core/*"],
       "@entities/*": ["./src/entities/*"],
       "@systems/*": ["./src/systems/*"],

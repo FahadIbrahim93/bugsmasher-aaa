@@ -14,6 +14,11 @@ import { AssetManager } from '@managers/AssetManager';
 import { SaveSystem } from '@managers/SaveManager';
 import { AnalyticsSystem } from '@managers/AnalyticsManager';
 import { ParticleSystem } from '@systems/ParticleSystem';
+import { MovementSystem } from '@systems/MovementSystem';
+import { RenderSystem } from '@systems/RenderSystem';
+import { BugSpawnerSystem } from '@systems/BugSpawnerSystem';
+import { BugBehaviorSystem } from '@systems/BugBehaviorSystem';
+import { CollisionSystem } from '@systems/CollisionSystem';
 import { GAME_CONFIG, CANVAS_CONFIG } from '@config/GameConfig';
 import { GameState } from '@typedefs/index';
 
@@ -218,8 +223,15 @@ export class Game {
   }
 
   private registerSystems(): void {
-    // ECS Systems will be registered here as they are built
-    // e.g., world.registerSystem(new MovementSystem(this.world));
+    const sw = CANVAS_CONFIG.width;
+    const sh = CANVAS_CONFIG.height;
+    const center = { x: sw / 2, y: sh / 2 };
+
+    this.world.registerSystem(new BugSpawnerSystem(this.world, sw, sh));
+    this.world.registerSystem(new BugBehaviorSystem(this.world, center));
+    this.world.registerSystem(new MovementSystem(this.world));
+    this.world.registerSystem(new CollisionSystem(this.world, this.particles, this.audio));
+    this.world.registerSystem(new RenderSystem(this.world, this.renderer));
   }
 
   private setupUIHandlers(): void {
