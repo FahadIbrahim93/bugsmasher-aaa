@@ -21,6 +21,7 @@ import { BugBehaviorSystem } from '@systems/BugBehaviorSystem';
 import { CollisionSystem } from '@systems/CollisionSystem';
 import { GAME_CONFIG, CANVAS_CONFIG } from '@config/GameConfig';
 import { GameState } from '@typedefs/index';
+import { initAssets } from '@assets/index';
 
 interface GameContext {
   game: Game;
@@ -47,7 +48,7 @@ export class Game {
   private analytics: AnalyticsSystem;
   private world: ECSWorld;
   private events: EventManager;
-  private stateMachine: StateMachine<GameContext>;
+  private stateMachine!: StateMachine<GameContext>;
 
   // Game loop
   private isRunning: boolean = false;
@@ -61,6 +62,8 @@ export class Game {
   private frameCount: number = 0;
   private fpsTimer: number = 0;
   private currentFPS: number = 0;
+  private score: number = 0;
+  private health: number = 100;
 
   // DOM elements
   private canvas!: HTMLCanvasElement;
@@ -75,22 +78,6 @@ export class Game {
     this.assets = AssetManager.getInstance();
     this.save = SaveSystem.getInstance();
     this.analytics = AnalyticsSystem.getInstance();
-
-    const context: GameContext = {
-      game: this,
-      world: this.world,
-      renderer: null as unknown as WebGLRenderer,
-      audio: this.audio,
-      input: this.input,
-      camera: this.camera,
-      particles: this.particles,
-      assets: this.assets,
-      save: this.save,
-      analytics: this.analytics,
-    };
-
-    this.stateMachine = createGameStateMachine(context);
-    this.registerStates();
   }
 
   async initialize(): Promise<void> {
@@ -109,6 +96,23 @@ export class Game {
 
     // Initialize renderer
     this.renderer = new WebGLRenderer(this.canvas);
+
+    // Initialize state machine with full context (renderer is now available)
+    const context: GameContext = {
+      game: this,
+      world: this.world,
+      renderer: this.renderer,
+      audio: this.audio,
+      input: this.input,
+      camera: this.camera,
+      particles: this.particles,
+      assets: this.assets,
+      save: this.save,
+      analytics: this.analytics,
+    };
+
+    this.stateMachine = createGameStateMachine(context);
+    this.registerStates();
 
     // Initialize input
     this.input.initialize(this.canvas);
@@ -149,8 +153,12 @@ export class Game {
         name: GameState.LOADING,
         onEnter: async () => {
           this.showScreen('loading-screen');
-          // Load assets here in the future
-          await new Promise(resolve => setTimeout(resolve, 800));
+          
+          // Actually load procedural assets and upload to GPU
+          await this.loadProceduralAssets();
+          
+          // Switch to menu after short delay for branding
+          setTimeout(() => this.stateMachine.transitionTo(GameState.MENU), 500);
         },
       })
       .registerState({
@@ -170,6 +178,31 @@ export class Game {
           this.showElement('hud');
           document.getElementById('hud')?.classList.add('active');
           this.analytics.trackProgression('start', 'wave_1');
+          
+          // Reset session stats
+          this.score = 0;
+          this.health = 100;
+          this.updateHUD();
+          
+          // Listen for score updates
+          this.events.on('score:update', (data: any) => {
+            this.score += data.value || 0;
+            this.updateHUD();
+          });
+          
+          // Listen for player damage (emitted by BugBehaviorSystem or direct check)
+          this.events.on('player:damage', (data: any) => {
+            this.health -= data.amount || 10;
+            this.updateHUD();
+            this.camera.shake(0.2, 5);
+            if (this.health <= 0) {
+              this.stateMachine.transitionTo(GameState.GAME_OVER);
+            }
+          });
+        },
+        onExit: () => {
+          this.events.off('score:update');
+          this.events.off('player:damage');
         },
         onUpdate: (_ctx, deltaTime) => {
           this.world.update(deltaTime);
@@ -198,14 +231,18 @@ export class Game {
         name: GameState.GAME_OVER,
         onEnter: () => {
           this.analytics.trackProgression('fail', 'game_over');
-          // Show game over screen
+          this.showScreen('game-over-screen');
+          const scoreEl = document.getElementById('final-score');
+          if (scoreEl) scoreEl.textContent = this.score.toString();
         },
       })
       .registerState({
         name: GameState.VICTORY,
         onEnter: () => {
           this.analytics.trackProgression('complete', 'victory');
-          // Show victory screen
+          this.showScreen('victory-screen');
+          const scoreEl = document.getElementById('victory-score');
+          if (scoreEl) scoreEl.textContent = this.score.toString();
         },
       });
 
@@ -230,8 +267,30 @@ export class Game {
     this.world.registerSystem(new BugSpawnerSystem(this.world, sw, sh));
     this.world.registerSystem(new BugBehaviorSystem(this.world, center));
     this.world.registerSystem(new MovementSystem(this.world));
-    this.world.registerSystem(new CollisionSystem(this.world, this.particles, this.audio));
-    this.world.registerSystem(new RenderSystem(this.world, this.renderer));
+    this.world.registerSystem(new CollisionSystem(this.world, this.particles, this.audio, this.camera));
+    this.world.registerSystem(new RenderSystem(this.world, this.renderer, this.camera));
+  }
+
+  private async loadProceduralAssets(): Promise<void> {
+    const startTime = performance.now();
+    
+    const assets = initAssets();
+    
+    // 1. Upload Bug Sprites
+    for (const [key, sprite] of Object.entries(assets.bugSprites as Record<string, any>)) {
+      this.renderer.createTexture(key, sprite.canvas);
+    }
+    
+    // 2. Upload Particle Atlas
+    this.renderer.createTexture('particle_atlas', assets.particleAtlas.canvas);
+    
+    // 3. Upload Power-Up Icons
+    for (const [key, icon] of Object.entries(assets.powerUpIcons as Record<string, any>)) {
+      this.renderer.createTexture(`powerup_${key}`, icon.canvas);
+    }
+    
+    const duration = performance.now() - startTime;
+    this.events.emit('assets:ready', { duration });
   }
 
   private setupUIHandlers(): void {
@@ -264,6 +323,20 @@ export class Game {
     document.getElementById('quit-button')?.addEventListener('click', async () => {
       await this.stateMachine.transitionTo(GameState.MENU, true);
     });
+
+    // Retry buttons (Game Over / Victory)
+    const retryHandler = async () => {
+      await this.stateMachine.transitionTo(GameState.PLAYING, true);
+    };
+    document.getElementById('retry-button')?.addEventListener('click', retryHandler);
+    document.getElementById('victory-retry-button')?.addEventListener('click', retryHandler);
+
+    // Menu buttons (Game Over / Victory)
+    const menuHandler = async () => {
+      await this.stateMachine.transitionTo(GameState.MENU, true);
+    };
+    document.getElementById('menu-button')?.addEventListener('click', menuHandler);
+    document.getElementById('victory-menu-button')?.addEventListener('click', menuHandler);
 
     // Settings button
     document.getElementById('settings-button')?.addEventListener('click', () => {
@@ -376,9 +449,12 @@ export class Game {
 
     // Render particles
     const particles = this.particles.getParticles();
+    const zoom = this.camera.getZoom();
     for (const p of particles) {
+      const screenPos = this.camera.worldToScreen(p.position);
+      const size = p.size * zoom;
       this.renderer.drawRect(
-        { x: p.position.x - p.size / 2, y: p.position.y - p.size / 2, width: p.size, height: p.size },
+        { x: screenPos.x - size / 2, y: screenPos.y - size / 2, width: size, height: size },
         p.color,
         p.rotation
       );
@@ -401,9 +477,21 @@ export class Game {
     this.camera.setViewport(width, height);
   }
 
+  private updateHUD(): void {
+    const scoreEl = document.getElementById('score-value');
+    if (scoreEl) scoreEl.textContent = this.score.toString();
+    
+    const healthEl = document.getElementById('health-value');
+    if (healthEl) {
+      healthEl.textContent = `${Math.ceil(this.health)}%`;
+      const fill = document.getElementById('health-fill');
+      if (fill) fill.style.width = `${this.health}%`;
+    }
+  }
+
   // UI helpers
   private showScreen(id: string): void {
-    const screens = ['main-menu', 'loading-screen', 'pause-menu'];
+    const screens = ['main-menu', 'loading-screen', 'pause-menu', 'game-over-screen', 'victory-screen'];
     for (const screenId of screens) {
       const el = document.getElementById(screenId);
       if (el) {

@@ -35,3 +35,8 @@ coverage/
 # Cache
 .cache/
 *.log
+
+# Reference documents (not for distribution)
+bugsmasher-aaa-complete-code.md
+OPENCODE_PROMPT.md
+AGENTS_MASTER.md

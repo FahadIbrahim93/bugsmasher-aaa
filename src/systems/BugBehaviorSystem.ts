@@ -1,23 +1,22 @@
-import type { System, Vec2 } from '@typedefs/index';
-import { BehaviorType } from '@typedefs/index';
+import type { Vec2, System } from '@typedefs/index';
 import { ECSWorld } from '@core/ECS';
 
 export class BugBehaviorSystem implements System {
   name = 'BugBehaviorSystem';
-  priority: 'normal' = 'normal';
+  priority = 'normal' as const;
   enabled = true;
 
   constructor(private world: ECSWorld, private targetPos: Vec2) {}
 
-  update(deltaTime: number): void {
+  update(_deltaTime: number): void {
     const bugs = this.world.query('bug_behavior', 'transform', 'velocity');
     
     for (const entity of bugs) {
       if (!entity.active) continue;
 
-      const behavior = entity.components.get('bug_behavior') as any;
-      const transform = entity.components.get('transform') as any;
-      const velocity = entity.components.get('velocity') as any;
+      const behavior = this.world.getComponentFromEntity<BugBehaviorComponent>(entity, 'bug_behavior');
+      const transform = this.world.getComponentFromEntity<TransformComponent>(entity, 'transform');
+      const velocity = this.world.getComponentFromEntity<VelocityComponent>(entity, 'velocity');
 
       if (!behavior || !transform || !velocity) continue;
 
@@ -36,8 +35,14 @@ export class BugBehaviorSystem implements System {
         velocity.velocity.x = dirX * behavior.speed;
         velocity.velocity.y = dirY * behavior.speed;
 
-        // Rotate bug towards walking direction (offset by PI/2 depending on sprite asset orientation)
+        // Rotate bug towards walking direction
         transform.rotation = Math.atan2(dirY, dirX) + Math.PI / 2;
+
+        // Check for player damage (if bug reaches center)
+        if (dist < 30) {
+          this.world.getEvents().emit('player:damage', { amount: 5 });
+          this.world.removeEntity(entity.id);
+        }
       }
     }
   }

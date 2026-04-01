@@ -1,5 +1,5 @@
 import type { Entity, Vec2 } from '@typedefs/index';
-import { BugType, BehaviorType } from '@typedefs/index';
+import { BugType } from '@typedefs/index';
 import { ECSWorld } from '@core/ECS';
 import { BUG_DEFINITIONS } from '@config/GameConfig';
 import { 

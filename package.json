@@ -1,6 +1,6 @@
 {
   "name": "bugsmasher-aaa",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.1",
   "description": "BugSmasher AAA - Enterprise HTML5 Game",
   "type": "module",
   "scripts": {

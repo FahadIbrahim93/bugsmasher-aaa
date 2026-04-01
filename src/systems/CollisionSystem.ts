@@ -4,27 +4,29 @@ import { EventManager } from '@core/EventManager';
 import { BugState, SoundType } from '@typedefs/index';
 import { ParticleSystem } from '@systems/ParticleSystem';
 import { AudioManager } from '@audio/AudioManager';
+import { Camera } from '@core/Camera';
 
 export class CollisionSystem implements System {
   name = 'CollisionSystem';
-  priority: 'high' = 'high';
+  priority = 'high' as const;
   enabled = true;
 
   private events: EventManager;
   // Queue to track clicks for this frame
   private clicks: Vec2[] = [];
 
-  constructor(private world: ECSWorld, private particles: ParticleSystem, private audio: AudioManager) {
+  constructor(private world: ECSWorld, private particles: ParticleSystem, private audio: AudioManager, private camera: Camera) {
     this.events = EventManager.getInstance();
     this.events.on('input:click', this.onInputClick.bind(this));
   }
 
   private onInputClick(data: unknown): void {
     const payload = data as { position: Vec2 };
-    this.clicks.push(payload.position);
+    // Convert screen coordinates to world coordinates
+    this.clicks.push(this.camera.screenToWorld(payload.position));
   }
 
-  update(deltaTime: number): void {
+  update(_deltaTime: number): void {
     if (this.clicks.length === 0) return;
 
     const bugs = this.world.query('collider', 'transform', 'health', 'bug_behavior');
@@ -35,7 +37,6 @@ export class CollisionSystem implements System {
 
         const collider = entity.components.get('collider') as any;
         const transform = entity.components.get('transform') as any;
-        const health = entity.components.get('health') as any;
         const behavior = entity.components.get('bug_behavior') as any;
 
         // Ignore dead bugs
@@ -75,7 +76,7 @@ export class CollisionSystem implements System {
       this.particles.burst(transform.position, 'blood');
       this.audio.playAt(SoundType.SQUISH, transform.position);
       
-      this.events.emit('score_update', { value: behavior.scoreValue });
+      this.events.emit('score:update', { value: behavior.scoreValue });
       
       // Remove entity
       this.world.removeEntity(entity.id);

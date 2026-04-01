@@ -26,7 +26,8 @@
       "@ui/*": ["./src/ui/*"],
       "@utils/*": ["./src/utils/*"],
       "@config/*": ["./src/config/*"],
-      "@typedefs/*": ["./src/types/*"]
+      "@typedefs/*": ["./src/types/*"],
+      "@assets/*": ["./src/assets/*"]
     }
   },
   "include": [

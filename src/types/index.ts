@@ -82,6 +82,44 @@ export interface Component {
   entityId?: EntityId;
 }
 
+export interface TransformComponent extends Component {
+  position: Vec2;
+  rotation: number;
+  scale: Vec2;
+}
+
+export interface VelocityComponent extends Component {
+  velocity: Vec2;
+  angularVelocity: number;
+}
+
+export interface SpriteComponent extends Component {
+  spriteKey: string;
+  width: number;
+  height: number;
+  color: Color;
+}
+
+export interface ColliderComponent extends Component {
+  radius: number;
+}
+
+export interface HealthComponent extends Component {
+  health: number;
+  maxHealth: number;
+  flashTimer: number;
+}
+
+export interface BugBehaviorComponent extends Component {
+  bugType: BugType;
+  state: BugState;
+  behaviors: BehaviorType[];
+  speed: number;
+  scoreValue: number;
+  stateTimer: number;
+  target: Vec2 | null;
+}
+
 export interface Entity {
   readonly id: EntityId;
   readonly components: Map<ComponentType, Component>;

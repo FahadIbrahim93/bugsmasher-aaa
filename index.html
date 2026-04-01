@@ -28,13 +28,46 @@
 
     <!-- HUD -->
     <div id="hud">
-      <div class="score-display">
-        <span>Score: </span><span id="score-value">0</span>
+      <div class="hud-left">
+        <div class="score-display">
+          <span class="hud-label">SCORE</span>
+          <span id="score-value" class="hud-value">0</span>
+        </div>
+        <div class="health-display">
+          <span class="hud-label">HEALTH</span>
+          <div class="health-bar">
+            <div id="health-fill" class="health-fill" style="width: 100%"></div>
+          </div>
+          <span id="health-value" class="hud-value health-text">100%</span>
+        </div>
       </div>
-      <div class="wave-display">
-        <span>Wave: </span><span id="wave-value">1</span>
+      <div class="hud-right">
+        <div class="wave-display">
+          <span class="hud-label">WAVE</span>
+          <span id="wave-value" class="hud-value">1</span>
+        </div>
+        <button id="pause-button" class="btn btn-secondary btn-small">⏸</button>
       </div>
-      <button id="pause-button" class="btn btn-secondary" style="position: absolute; top: 20px; right: 50%;">Pause</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" style="display: none;">
+      <h2 class="game-title" style="font-size: 3rem; color: var(--color-danger);">GAME OVER</h2>
+      <p class="final-score">Final Score: <span id="final-score">0</span></p>
+      <div class="menu-buttons">
+        <button id="retry-button" class="btn btn-primary">Retry</button>
+        <button id="menu-button" class="btn btn-secondary">Main Menu</button>
+      </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" style="display: none;">
+      <h2 class="game-title" style="font-size: 3rem;">VICTORY!</h2>
+      <p class="final-score">Final Score: <span id="victory-score">0</span></p>
+      <div class="menu-buttons">
+        <button id="victory-retry-button" class="btn btn-primary">Play Again</button>
+        <button id="victory-menu-button" class="btn btn-secondary">Main Menu</button>
+      </div>
     </div>
 
     <!-- Pause Menu -->

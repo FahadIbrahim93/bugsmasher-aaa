@@ -1,9 +1,9 @@
-import type { System, Entity } from '@typedefs/index';
+import type { System } from '@typedefs/index';
 import { ECSWorld } from '@core/ECS';
 
 export class MovementSystem implements System {
   name = 'MovementSystem';
-  priority: 'high' = 'high';
+  priority = 'high' as const;
   enabled = true;
 
   constructor(private world: ECSWorld) {}

@@ -37,6 +37,13 @@ export class ECSWorld {
   }
 
   /**
+   * Get the world's event manager
+   */
+  getEvents(): EventManager {
+    return this.events;
+  }
+
+  /**
    * Create a new entity
    */
   createEntity(tag?: string): Entity {
@@ -128,6 +135,13 @@ export class ECSWorld {
   getComponent<T extends Component>(entityId: EntityId, componentType: ComponentType): T | undefined {
     const entity = this.entities.get(entityId);
     return entity?.components.get(componentType) as T | undefined;
+  }
+
+  /**
+   * Get a component from a specific entity (Type-safe)
+   */
+  getComponentFromEntity<T extends Component>(entity: Entity, type: ComponentType): T | undefined {
+    return entity.components.get(type) as T | undefined;
   }
 
   /**

@@ -5,7 +5,7 @@ import { spawnBug } from '@entities/Bug';
 
 export class BugSpawnerSystem implements System {
   name = 'BugSpawnerSystem';
-  priority: 'normal' = 'normal';
+  priority = 'normal' as const;
   enabled = true;
 
   private currentWaveIndex = 0;
@@ -29,7 +29,12 @@ export class BugSpawnerSystem implements System {
         this.waveTimer = 0;
         this.bugsSpawnedInWave = 0;
         this.spawnTimer = 0;
-        // Optionally emit an event that wave ended
+        
+        if (this.currentWaveIndex >= WAVE_CONFIGS.length) {
+          this.world.getEvents().emit('game:victory', {});
+        } else {
+          this.world.getEvents().emit('game:wave_complete', { wave: this.currentWaveIndex });
+        }
         return;
       }
     }
