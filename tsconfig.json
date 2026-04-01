@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "paths": {
+      "@core/*": ["./src/core/*"],
+      "@entities/*": ["./src/entities/*"],
+      "@systems/*": ["./src/systems/*"],
+      "@managers/*": ["./src/managers/*"],
+      "@renderers/*": ["./src/renderers/*"],
+      "@audio/*": ["./src/audio/*"],
+      "@input/*": ["./src/input/*"],
+      "@ui/*": ["./src/ui/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@config/*": ["./src/config/*"],
+      "@typedefs/*": ["./src/types/*"]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
