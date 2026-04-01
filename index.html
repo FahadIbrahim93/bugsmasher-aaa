@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="BugSmasher AAA - Enterprise-grade HTML5 game">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>BugSmasher AAA</title>
+  <script type="module" crossorigin src="/assets/index-C3i7DeSO.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DvqEsFx1.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Main Menu -->
+    <div id="main-menu">
+      <h1 class="game-title">BUG SMASHER</h1>
+      <div class="menu-buttons">
+        <button id="start-button" class="btn btn-primary">Start Game</button>
+        <button id="settings-button" class="btn btn-secondary">Settings</button>
+        <button id="credits-button" class="btn btn-secondary">Credits</button>
+      </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading...</p>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="score-display">
+        <span>Score: </span><span id="score-value">0</span>
+      </div>
+      <div class="wave-display">
+        <span>Wave: </span><span id="wave-value">1</span>
+      </div>
+      <button id="pause-button" class="btn btn-secondary" style="position: absolute; top: 20px; right: 50%;">Pause</button>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="pause-menu">
+      <h2 class="game-title" style="font-size: 2rem;">PAUSED</h2>
+      <div class="menu-buttons">
+        <button id="resume-button" class="btn btn-primary">Resume</button>
+        <button id="restart-button" class="btn btn-secondary">Restart</button>
+        <button id="quit-button" class="btn btn-secondary">Quit to Menu</button>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="ui-overlay" style="display: none; justify-content: center; align-items: center;">
+      <div class="settings-panel">
+        <h2 class="settings-title">Settings</h2>
+
+        <div class="setting-item">
+          <label class="setting-label">Master Volume</label>
+          <input type="range" id="master-volume" class="setting-slider" min="0" max="1" step="0.1" value="1">
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">SFX Volume</label>
+          <input type="range" id="sfx-volume" class="setting-slider" min="0" max="1" step="0.1" value="0.8">
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Music Volume</label>
+          <input type="range" id="music-volume" class="setting-slider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
+        <div class="setting-item" style="margin-top: 1.5rem;">
+          <button id="fullscreen-btn" class="btn btn-secondary" style="width: 100%;">Toggle Fullscreen</button>
+        </div>
+
+        <div class="setting-item">
+          <button id="close-settings" class="btn btn-primary" style="width: 100%;">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
